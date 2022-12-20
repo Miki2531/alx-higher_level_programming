@@ -1,99 +1,118 @@
 #!/usr/bin/python3
 """Defines a class Square"""
 
+#include <stdio.h>
+#include <Python.h>
 
-class Square:
-    """Represents a square
+/**
+ * print_python_bytes - Prints bytes information
+ *
+ * @p: Python Object
+ * Return: no return
+ */
+void print_python_bytes(PyObject *p)
+{
+	char *string;
+	long int size, i, limit;
 
-    Attributes:
-        __size (int): size of a size of the square
-        __position (tuple): position of the square in 2D space
-    """
-    def __init__(self, size=0, position=(0, 0)):
-        """initializes the square
+	setbuf(stdout, NULL);
 
-        Args:
-            size (int): size of a side of the square
-            position (tuple): positoin of the square in 2D space
+	printf("[.] bytes object info\n");
+	if (!PyBytes_Check(p))
+	{
+		printf("  [ERROR] Invalid Bytes Object\n");
+		setbuf(stdout, NULL);
+		return;
+	}
 
-        Returns:
-            None
-        """
-        self.size = size
-        self.position = position
+	size = ((PyVarObject *)(p))->ob_size;
+	string = ((PyBytesObject *)p)->ob_sval;
 
-    def area(self):
-        """calculates the square's area
+	printf("  size: %ld\n", size);
+	printf("  trying string: %s\n", string);
 
-        Returns:
-            The area of the square
-        """
-        return (self.__size) ** 2
+	if (size >= 10)
+		limit = 10;
+	else
+		limit = size + 1;
 
-    @property
-    def size(self):
-        """getter of __size
+	printf("  first %ld bytes:", limit);
 
-        Returns:
-            The size of the square
-        """
-        return self.__size
+	for (i = 0; i < limit; i++)
+		if (string[i] >= 0)
+			printf(" %02x", string[i]);
+		else
+			printf(" %02x", 256 + string[i]);
 
-    @size.setter
-    def size(self, value):
-        """setter of __size
+	printf("\n");
+	setbuf(stdout, NULL);
+}
 
-        Args:
-            value (int): size of a side of the square
+/**
+ * print_python_float - Prints float information
+ *
+ * @p: Python Object
+ * Return: no return
+ */
+void print_python_float(PyObject *p)
+{
+	double val;
+	char *nf;
 
-        Returns:
-            None
-        """
-        if type(value) is not int:
-            raise TypeError("size must be an integer")
-        else:
-            if value < 0:
-                raise ValueError("size must be >= 0")
-            else:
-                self.__size = value
+	setbuf(stdout, NULL);
+	printf("[.] float object info\n");
 
-    def my_print(self):
-        """prints the square
+	if (!PyFloat_Check(p))
+	{
+		printf("  [ERROR] Invalid Float Object\n");
+		setbuf(stdout, NULL);
+		return;
+	}
 
-        Returns:
-            None
-        """
-        if self.__size == 0:
-            print()
-            return
-        for i in range(self.__position[1]):
-            print()
-        for j in range(self.__size):
-            print("".join([" " for k in range(self.__position[0])]), end="")
-            print("".join(["#" for l in range(self.__size)]))
+	val = ((PyFloatObject *)(p))->ob_fval;
+	nf = PyOS_double_to_string(val, 'r', 0, Py_DTSF_ADD_DOT_0, Py_DTST_FINITE);
 
-    @property
-    def position(self):
-        """getter of __position
+	printf("  value: %s\n", nf);
+	setbuf(stdout, NULL);
+}
 
-        Returns:
-            The position of the square in 2D space
-        """
-        return self.__position
+/**
+ * print_python_list - Prints list information
+ *
+ * @p: Python Object
+ * Return: no return
+ */
+void print_python_list(PyObject *p)
+{
+	long int size, i;
+	PyListObject *list;
+	PyObject *obj;
 
-    @position.setter
-    def position(self, value):
-        """setter of __position
+	setbuf(stdout, NULL);
+	printf("[*] Python list info\n");
 
-        Args:
-            value (tuple): position of the square in 2D space
+	if (!PyList_Check(p))
+	{
+		printf("  [ERROR] Invalid List Object\n");
+		setbuf(stdout, NULL);
+		return;
+	}
 
-        Returns:
-            None
-        """
-        if type(value) is not tuple or len(value) != 2 or \
-           type(value[0]) is not int or value[0] < 0 or \
-           type(value[1]) is not int or value[1] < 0:
-            raise TypeError("position must be a tuple of 2 positive integers")
-        else:
-            self.__position = value
+	size = ((PyVarObject *)(p))->ob_size;
+	list = (PyListObject *)p;
+
+	printf("[*] Size of the Python List = %ld\n", size);
+	printf("[*] Allocated = %ld\n", list->allocated);
+
+	for (i = 0; i < size; i++)
+	{
+		obj = list->ob_item[i];
+		printf("Element %ld: %s\n", i, ((obj)->ob_type)->tp_name);
+
+		if (PyBytes_Check(obj))
+			print_python_bytes(obj);
+		if (PyFloat_Check(obj))
+			print_python_float(obj);
+	}
+	setbuf(stdout, NULL);
+}
