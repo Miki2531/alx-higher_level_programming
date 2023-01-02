@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-"""Defines a class Square"""
-
 #include <stdio.h>
 #include <Python.h>
 
